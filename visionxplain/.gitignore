@@ -53,3 +53,7 @@ docs/~$*
 
 # Backup files
 *.sh~
+run_all.sh
+run_evaluate.sh
+run_train.sh
+run_training.sh
