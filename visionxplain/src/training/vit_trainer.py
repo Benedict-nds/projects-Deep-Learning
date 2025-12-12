@@ -1,26 +1,21 @@
 """
-finetune.py
------------
-Handles fine-tuning for VisionXplain models (CNN, ViT, Hybrid).
-Includes CNNTrainer class for CNN model training.
+vit_trainer.py
+---------------
+ViT-specific trainer with support for attention visualization and metrics.
 """
 
 import torch
 import torch.nn as nn
 import os
 from typing import Optional
-from torch.optim import Adam, AdamW
-from torch.optim.lr_scheduler import CosineAnnealingLR
 from tqdm import tqdm
-
-from src.models.vit.vit import ViTClassifier
-from src.models.baseline.cnn import SimpleCNN
 from src.training.metrics import MetricsCalculator
 
 
-class CNNTrainer:
+class ViTTrainer:
     """
-    Trainer for CNN models.
+    Trainer for Vision Transformer models.
+    Includes metrics tracking and checkpointing.
     """
     
     def __init__(
@@ -29,13 +24,13 @@ class CNNTrainer:
         train_loader: torch.utils.data.DataLoader,
         val_loader: torch.utils.data.DataLoader,
         epochs: int = 10,
-        lr: float = 1e-3,
+        lr: float = 3e-5,
         device: Optional[torch.device] = None,
         save_dir: str = "outputs/models"
     ):
         """
         Args:
-            model: CNN model to train
+            model: ViT model to train
             train_loader: Training data loader
             val_loader: Validation data loader
             epochs: Number of training epochs
@@ -103,6 +98,7 @@ class CNNTrainer:
             
             # Backward pass
             loss.backward()
+            torch.nn.utils.clip_grad_norm_(self.model.parameters(), max_norm=1.0)
             self.optimizer.step()
             
             running_loss += loss.item()
@@ -154,13 +150,10 @@ class CNNTrainer:
             'history': self.history
         }
         
-        # Determine model type from model name
-        model_name = 'hybrid' if 'hybrid' in str(type(self.model)).lower() else 'cnn'
-        
         if is_best:
-            path = os.path.join(self.save_dir, f'best_{model_name}_model.pt')
+            path = os.path.join(self.save_dir, 'best_vit_model.pt')
         else:
-            path = os.path.join(self.save_dir, f'{model_name}_checkpoint_epoch_{epoch}.pt')
+            path = os.path.join(self.save_dir, f'vit_checkpoint_epoch_{epoch}.pt')
         
         torch.save(checkpoint, path)
         print(f"✓ Checkpoint saved: {path}")
@@ -192,7 +185,7 @@ class CNNTrainer:
             early_stopping_patience: Number of epochs to wait before stopping if no improvement
             resume_from: Path to checkpoint to resume from
         """
-        print(f"\n🚀 Starting CNN Training")
+        print(f"\n🚀 Starting ViT Training")
         print(f"Device: {self.device}")
         print(f"Epochs: {self.epochs}")
         print(f"Train batches: {len(self.train_loader)}")
@@ -278,73 +271,3 @@ class CNNTrainer:
         print("\n✅ Training completed!")
         return self.history
 
-
-# Fine-tuning utilities
-
-def load_model(model_name: str, num_classes: int = 2, pretrained: bool = True):
-    """Load model depending on name."""
-    model_name = model_name.lower()
-    
-    if model_name == "vit":
-        model = ViTClassifier(
-            model_name="vit_base_patch16_224",
-            num_classes=num_classes,
-            pretrained=pretrained,
-            dropout=0.1,
-            return_attentions=False
-        )
-        return model
-    
-    elif model_name == "cnn":
-        return SimpleCNN(num_classes=num_classes, pretrained=pretrained)
-    
-    else:
-        raise ValueError(f"Unknown model: {model_name}")
-
-
-def apply_finetune_strategy(model, strategy: str = "freeze_backbone", top_k: int = 2):
-    """
-    Apply fine-tuning strategy.
-    
-    strategy options:
-        - freeze_backbone: freeze all encoder layers (used for small datasets)
-        - unfreeze_top_k: unfreeze last k transformer blocks (ViT only)
-        - full_finetune: unfreeze everything
-    """
-    strategy = strategy.lower()
-    
-    if strategy == "freeze_backbone":
-        if hasattr(model, "freeze_backbone"):
-            model.freeze_backbone()
-        else:
-            # Freeze backbone, keep classifier trainable
-            for name, param in model.named_parameters():
-                if 'classifier' not in name and 'head' not in name and 'fc' not in name:
-                    param.requires_grad = False
-        return model
-    
-    if strategy == "unfreeze_top_k":
-        if hasattr(model, "unfreeze_top_k_blocks"):
-            model.unfreeze_top_k_blocks(k=top_k)
-        return model
-    
-    if strategy == "full_finetune":
-        for p in model.parameters():
-            p.requires_grad = True
-        return model
-    
-    raise ValueError(f"Unknown fine-tuning strategy: {strategy}")
-
-
-def build_optimizer(model, lr: float = 1e-4, weight_decay: float = 1e-4, optimizer_type="adamw"):
-    """Build optimizer for fine-tuning."""
-    trainable = [p for p in model.parameters() if p.requires_grad]
-    
-    if optimizer_type.lower() == "adam":
-        return Adam(trainable, lr=lr, weight_decay=weight_decay)
-    
-    elif optimizer_type.lower() == "adamw":
-        return AdamW(trainable, lr=lr, weight_decay=weight_decay)
-    
-    else:
-        raise ValueError("Unknown optimizer type")

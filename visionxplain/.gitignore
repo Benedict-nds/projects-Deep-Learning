@@ -1,0 +1,55 @@
+
+*.md
+!outputs/reports/QUALITY_REPORT.md
+
+
+# Ignore everything in outputs/
+outputs/*
+
+# KEEP these 4 folders:
+!outputs/benchmarks/
+!outputs/evaluation/
+!outputs/explanations/
+!outputs/reports/
+
+# Inside reports, ignore everything except QUALITY_REPORT.md
+outputs/reports/*
+!outputs/reports/QUALITY_REPORT.md
+
+# Model files (VERY LARGE - 281MB to 1.2GB each)
+*.pt
+*.pth
+*.pkl
+*.h5
+*.hdf5
+
+# Data directories (large image datasets)
+data/raw/
+data/processed/
+
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+
+# Jupyter cache
+*.ipynb_checkpoints/
+
+# Virtual environments
+env/
+venv/
+.venv/
+
+# System/OS files
+.DS_Store
+Thumbs.db
+
+# Logs
+*.log
+
+# Word docs
+docs/*.docx
+docs/~$*
+
+# Backup files
+*.sh~

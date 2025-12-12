@@ -26,10 +26,10 @@ SimpleITK>=2.3.0  # Medical image processing (optional)
 captum>=0.6.0  # Model interpretability
 grad-cam>=1.4.0  # Grad-CAM implementation
 torchray>=1.0.0  # Additional interpretability methods
-innvestigate>=2.0.0  # LRP and other methods
+#innvestigate>=2.0.0  # LRP and other methods
 
 # Attention Visualization
-attention-rollout>=0.1.0  # Attention rollout (if available)
+#attention-rollout>=0.1.0  # Attention rollout (if available)
 bertviz>=1.4.0  # Attention visualization (adapted for ViT)
 
 # Evaluation Metrics
