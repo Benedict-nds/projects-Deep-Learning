@@ -176,7 +176,7 @@ def main():
         model_paths['hybrid'] = args.hybrid_model
     
     if not model_paths:
-        print("❌ No model checkpoints found!")
+        print(" No model checkpoints found!")
         return
     
     # Run testing
