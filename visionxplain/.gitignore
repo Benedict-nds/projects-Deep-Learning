@@ -6,10 +6,11 @@
 # Ignore everything in outputs/
 outputs/*
 
-# KEEP these 4 folders:
+# KEEP these 5 folders:
 !outputs/benchmarks/
 !outputs/evaluation/
 !outputs/explanations/
+!outputs/plots/
 !outputs/reports/
 
 # Inside reports, ignore everything except QUALITY_REPORT.md
